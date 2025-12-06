@@ -20,7 +20,7 @@ class ExpenseDetailScreen extends StatefulWidget {
 
 class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
   final ScreenshotController _screenshotController = ScreenshotController();
-  bool _isSaving = false;
+
   late Expense _expense;
 
   @override
@@ -41,8 +41,6 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
   }
 
   Future<void> _saveReceipt() async {
-    setState(() => _isSaving = true);
-
     try {
       final directory = await getTemporaryDirectory();
       final fileName = 'receipt_${_expense.id}.png';
@@ -70,10 +68,6 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
           SnackBar(content: Text('Error saving receipt: $e')),
         );
       }
-    } finally {
-      if (mounted) {
-        setState(() => _isSaving = false);
-      }
     }
   }
 
@@ -100,7 +94,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.save_alt),
-            onPressed: _isSaving ? null : _saveReceipt,
+            onPressed: _saveReceipt,
             tooltip: 'Save Receipt',
           ),
         ],
@@ -112,182 +106,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
             // Receipt Widget to Capture
             Screenshot(
               controller: _screenshotController,
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius:
-                      BorderRadius.circular(0), // Sharp edges for paper look
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Header
-                    const Icon(
-                      Icons.receipt_long,
-                      size: 48,
-                      color: Color(0xFFFF7043),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      _isSaving ? 'PAYMENT RECEIPT' : 'EXPENSE DETAIL',
-                      style: GoogleFonts.poppins(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 2,
-                        color: Colors.grey.shade800,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      DateFormat('MMMM d, yyyy  h:mm a').format(_expense.date),
-                      style: GoogleFonts.poppins(
-                        color: Colors.grey.shade600,
-                        fontSize: 12,
-                      ),
-                    ),
-                    const Divider(height: 40, thickness: 1),
-
-                    // Amount
-                    Text(
-                      'TOTAL AMOUNT',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: Colors.grey.shade500,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      NumberFormat.simpleCurrency(locale: 'en_US', name: 'PKR')
-                          .format(_expense.amount),
-                      style: GoogleFonts.poppins(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF2D3142),
-                      ),
-                    ),
-                    const Divider(height: 40, thickness: 1),
-
-                    // Details
-                    _buildDetailRow('Category', _expense.category),
-                    _buildDetailRow('Payment Method', _expense.paymentMethod),
-                    if (_expense.title.isNotEmpty)
-                      _buildDetailRow('Item', _expense.title),
-                    if (_expense.note.isNotEmpty)
-                      _buildDetailRow('Note', _expense.note),
-
-                    // Stamp (Only visible on Receipt)
-                    if (_isSaving) ...[
-                      const SizedBox(height: 40),
-                      // Circular Digital Stamp
-                      Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                              color: const Color(0xFFFF7043)
-                                  .withValues(alpha: 0.8),
-                              width: 3),
-                        ),
-                        transform: Matrix4.rotationZ(-0.2),
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            // Outer Ring Text (Simulated with positioning)
-                            Positioned(
-                              top: 10,
-                              child: Text(
-                                'HISAB APP',
-                                style: GoogleFonts.courierPrime(
-                                  color: const Color(0xFFFF7043)
-                                      .withValues(alpha: 0.8),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  letterSpacing: 2,
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 10,
-                              child: Text(
-                                'VERIFIED',
-                                style: GoogleFonts.courierPrime(
-                                  color: const Color(0xFFFF7043)
-                                      .withValues(alpha: 0.8),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  letterSpacing: 2,
-                                ),
-                              ),
-                            ),
-                            // Center Star
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.star,
-                                    color: const Color(0xFFFF7043)
-                                        .withValues(alpha: 0.8),
-                                    size: 24),
-                                Text(
-                                  'APPROVED',
-                                  style: GoogleFonts.courierPrime(
-                                    color: const Color(0xFFFF7043)
-                                        .withValues(alpha: 0.8),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      const SizedBox(height: 40),
-                      const Divider(color: Colors.grey, thickness: 0.5),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Generated by Hisab App',
-                            style: GoogleFonts.poppins(
-                              fontSize: 8,
-                              color: Colors.grey.shade500,
-                            ),
-                          ),
-                          Text(
-                            'Developed by Hasnain Haider',
-                            style: GoogleFonts.poppins(
-                              fontSize: 8,
-                              color: Colors.grey.shade500,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            'Thank You!',
-                            style: GoogleFonts.dancingScript(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey.shade500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
+              child: _buildReceiptContent(),
             ),
 
             const SizedBox(height: 24),
@@ -332,28 +151,191 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildReceiptContent() {
+    const primaryColor = Color(0xFF2C3E50); // Dark Slate Blue
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // Header Icon
+          const Icon(
+            Icons.receipt_long_outlined,
+            size: 48,
+            color: primaryColor,
+          ),
+          const SizedBox(height: 16),
+
+          // Title
           Text(
-            label,
+            'PAYMENT RECEIPT',
+            style: GoogleFonts.poppins(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF454545),
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            DateFormat('MMMM d, yyyy  h:mm a').format(_expense.date),
             style: GoogleFonts.poppins(
               color: Colors.grey.shade600,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Divider(thickness: 1, color: Color(0xFFEEEEEE)),
+          const SizedBox(height: 16),
+
+          // Total Amount
+          Text(
+            'TOTAL AMOUNT:',
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: Colors.grey.shade600,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            NumberFormat.simpleCurrency(locale: 'en_US', name: 'PKR')
+                .format(_expense.amount),
+            style: GoogleFonts.poppins(
+              fontSize: 36,
+              fontWeight: FontWeight.w900,
+              color: primaryColor,
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Divider(thickness: 1, color: Color(0xFFEEEEEE)),
+          const SizedBox(height: 16),
+
+          // Details List
+          _buildDetailRow('Category:', _expense.category),
+          _buildDetailRow('Payment Method:', _expense.paymentMethod),
+          if (_expense.title.isNotEmpty)
+            _buildDetailRow('Item:', _expense.title),
+          if (_expense.note.isNotEmpty) _buildDetailRow('Note:', _expense.note),
+
+          const SizedBox(height: 16),
+          const Divider(thickness: 1, color: Color(0xFFEEEEEE)),
+          const SizedBox(height: 24),
+
+          // New Stamp Design (Smaller)
+          SizedBox(
+            width: 100,
+            height: 100,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Outer Ring
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: primaryColor, width: 2),
+                  ),
+                ),
+                // Inner Ring
+                Container(
+                  width: 90,
+                  height: 90,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: primaryColor, width: 1.5),
+                  ),
+                ),
+                // Text
+                Transform.rotate(
+                  angle: -0.2,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    color: Colors.white,
+                    child: Text(
+                      'HISAB',
+                      style: GoogleFonts.poppins(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: primaryColor,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ),
+                ),
+                // Sparkle Icon
+                Positioned(
+                  top: 18,
+                  right: 18,
+                  child: Icon(
+                    Icons.auto_awesome,
+                    color: primaryColor,
+                    size: 18,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Simple Footer
+          Text(
+            'developed by Hasnain Haider',
+            style: GoogleFonts.dancingScript(
               fontSize: 14,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 140,
+            child: Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF454545),
+                fontSize: 14,
+              ),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              textAlign: TextAlign.right,
               style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF2D3142),
+                color: const Color(0xFF666666),
                 fontSize: 14,
+                fontWeight: FontWeight.w400,
               ),
+              textAlign: TextAlign.left,
             ),
           ),
         ],
