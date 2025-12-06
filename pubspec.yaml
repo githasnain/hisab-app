@@ -16,7 +16,7 @@ dependencies:
   uuid: ^3.0.7
   image_picker: ^1.0.7
   share_plus: ^7.2.1
-  screenshot: ^2.1.0
+  screenshot: ^3.0.0
   gal: ^2.3.0
   google_fonts: ^4.0.4
 
