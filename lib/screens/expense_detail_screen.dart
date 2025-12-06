@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:screenshot/screenshot.dart';
-import 'package:gallery_saver/gallery_saver.dart';
+import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/expense.dart';
 
@@ -35,7 +35,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
       );
 
       if (capturedImage != null) {
-        await GallerySaver.saveImage(path, albumName: 'Hisab Receipts');
+        await Gal.putImage(path, album: 'Hisab Receipts');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Receipt saved to Gallery!')),
