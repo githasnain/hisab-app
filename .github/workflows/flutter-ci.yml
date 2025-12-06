@@ -32,14 +32,12 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
         
-      - name: Build APK
-        run: flutter build apk --release
+      - name: Build APKs (Split per ABI)
+        run: flutter build apk --release --split-per-abi
         
-      - name: Upload APK artifact
+      - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
           name: hisab-app-release
           retention-days: 7
-          path: |
-            build/app/outputs/apk/release/app-release.apk
-            build/app/outputs/apk/release/output.json
+          path: build/app/outputs/flutter-apk/*.apk
