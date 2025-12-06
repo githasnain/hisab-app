@@ -160,7 +160,7 @@ class HomeScreen extends StatelessWidget {
                 const Padding(
                   padding: EdgeInsets.only(top: 20.0),
                   child: Text(
-                    'Develop by Hasnain Haider',
+                    'Developed by Hasnain Haider',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.grey,
