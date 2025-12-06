@@ -1,11 +1,26 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import '../boxes.dart';
 import '../models/expense.dart';
 
-class HistoryScreen extends StatelessWidget {
+class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
+
+  @override
+  State<HistoryScreen> createState() => _HistoryScreenState();
+}
+
+class _HistoryScreenState extends State<HistoryScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,13 +30,48 @@ class HistoryScreen extends StatelessWidget {
         title: const Text('Expense History'),
         elevation: 0,
         centerTitle: true,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value.toLowerCase();
+                });
+              },
+              decoration: InputDecoration(
+                hintText: 'Search expenses...',
+                prefixIcon: const Icon(Icons.search),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(30),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 0),
+              ),
+            ),
+          ),
+        ),
       ),
       body: ValueListenableBuilder<Box<Expense>>(
         valueListenable: Boxes.getExpenses().listenable(),
         builder: (context, box, _) {
           final expenses = box.values.toList().cast<Expense>();
 
-          if (expenses.isEmpty) {
+          // Filter by search query
+          final filteredExpenses = expenses.where((expense) {
+            final title = expense.title.toLowerCase();
+            final category = expense.category.toLowerCase();
+            final note = expense.note.toLowerCase();
+            return title.contains(_searchQuery) ||
+                category.contains(_searchQuery) ||
+                note.contains(_searchQuery);
+          }).toList();
+
+          if (filteredExpenses.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -29,7 +79,9 @@ class HistoryScreen extends StatelessWidget {
                   Icon(Icons.history, size: 80, color: Colors.grey.shade300),
                   const SizedBox(height: 16),
                   Text(
-                    'No expenses yet!',
+                    _searchQuery.isEmpty
+                        ? 'No expenses yet!'
+                        : 'No matching expenses',
                     style: TextStyle(fontSize: 20, color: Colors.grey.shade500),
                   ),
                 ],
@@ -38,11 +90,11 @@ class HistoryScreen extends StatelessWidget {
           }
 
           // Sort by date descending
-          expenses.sort((a, b) => b.date.compareTo(a.date));
+          filteredExpenses.sort((a, b) => b.date.compareTo(a.date));
 
           // Group by date
           final groupedExpenses = <String, List<Expense>>{};
-          for (var expense in expenses) {
+          for (var expense in filteredExpenses) {
             final dateKey = DateFormat('yyyy-MM-dd').format(expense.date);
             if (!groupedExpenses.containsKey(dateKey)) {
               groupedExpenses[dateKey] = [];
@@ -149,18 +201,27 @@ class HistoryScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                // Icon
+                // Icon or Thumbnail
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  width: 50,
+                  height: 50,
                   decoration: BoxDecoration(
                     color: const Color(0xFF00695C).withValues(alpha: 0.1),
                     shape: BoxShape.circle,
+                    image: (expense.imagePaths.isNotEmpty)
+                        ? DecorationImage(
+                            image: FileImage(File(expense.imagePaths.first)),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
                   ),
-                  child: Icon(
-                    _getCategoryIcon(expense.category),
-                    color: const Color(0xFF00695C),
-                    size: 24,
-                  ),
+                  child: (expense.imagePaths.isEmpty)
+                      ? Icon(
+                          _getCategoryIcon(expense.category),
+                          color: const Color(0xFF00695C),
+                          size: 24,
+                        )
+                      : null,
                 ),
                 const SizedBox(width: 16),
 
@@ -170,26 +231,44 @@ class HistoryScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        expense.category,
+                        expense.title.isNotEmpty
+                            ? expense.title
+                            : expense.category,
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
                         ),
                       ),
-                      if (expense.note.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          expense.note,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey.shade600,
-                            fontStyle: FontStyle.italic,
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          if (expense.paymentMethod != 'Cash') ...[
+                            Icon(
+                              expense.paymentMethod == 'Card'
+                                  ? Icons.credit_card
+                                  : Icons.account_balance,
+                              size: 14,
+                              color: Colors.grey.shade600,
+                            ),
+                            const SizedBox(width: 4),
+                          ],
+                          Expanded(
+                            child: Text(
+                              expense.note.isNotEmpty
+                                  ? expense.note
+                                  : expense.category,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey.shade600,
+                                fontStyle: FontStyle.italic,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                        ],
+                      ),
                     ],
                   ),
                 ),
