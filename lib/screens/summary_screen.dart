@@ -10,11 +10,12 @@ class SummaryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: const Color(0xFFFFF8E1), // Cream
       appBar: AppBar(
         title: const Text('Monthly Summary'),
         elevation: 0,
         centerTitle: true,
+        backgroundColor: const Color(0xFFFFF8E1), // Cream
       ),
       body: ValueListenableBuilder<Box<Expense>>(
         valueListenable: Boxes.getExpenses().listenable(),
@@ -80,7 +81,7 @@ class SummaryScreen extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF00695C),
+                                color: Color(0xFFFF7043), // Coral
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -128,14 +129,14 @@ class SummaryScreen extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF00695C), Color(0xFF4DB6AC)],
+          colors: [Color(0xFFFF7043), Color(0xFFFFAB91)], // Coral to Soft Coral
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF00695C).withValues(alpha: 0.4),
+            color: const Color(0xFFFF7043).withValues(alpha: 0.4),
             blurRadius: 12,
             offset: const Offset(0, 8),
           ),
@@ -335,7 +336,7 @@ class SummaryScreen extends StatelessWidget {
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF00695C),
+              backgroundColor: const Color(0xFFFF7043), // Coral
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8)),

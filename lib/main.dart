@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'models/expense.dart';
 import 'screens/home_screen.dart';
+import 'screens/welcome_screen.dart';
+import 'boxes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,79 +22,52 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settingsBox = Boxes.getSettings();
+    final bool hasSeenWelcome =
+        settingsBox.get('hasSeenWelcome', defaultValue: false);
+
     return MaterialApp(
-      title: 'Home Expense Manager',
+      title: 'Hisab',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF00695C), // Deep Teal
-          brightness: Brightness.light,
+          seedColor: const Color(0xFFFF7043), // Coral
+          secondary: const Color(0xFF81C784), // Soft Green
+          surface: const Color(0xFFFFF8E1), // Cream
         ),
-        scaffoldBackgroundColor: const Color(0xFFF5F5F5),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF00695C),
-          foregroundColor: Colors.white,
-          centerTitle: true,
+        scaffoldBackgroundColor: const Color(0xFFFFF8E1),
+        textTheme: GoogleFonts.poppinsTextTheme(),
+        appBarTheme: AppBarTheme(
+          backgroundColor: const Color(0xFFFFF8E1),
           elevation: 0,
-          titleTextStyle: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
+          centerTitle: true,
+          titleTextStyle: GoogleFonts.poppins(
+            color: const Color(0xFF2D3142),
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
           ),
-        ),
-        cardTheme: CardThemeData(
-          elevation: 4,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          color: Colors.white,
-          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          iconTheme: const IconThemeData(color: Color(0xFF2D3142)),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF00695C),
+            backgroundColor: const Color(0xFFFF7043),
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
-            textStyle:
-                const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            elevation: 4,
+            textStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
           ),
         ),
-        floatingActionButtonTheme: const FloatingActionButtonThemeData(
-          backgroundColor: Color(0xFFFF6F00), // Amber/Orange for contrast
-          foregroundColor: Colors.white,
-          iconSize: 32,
-        ),
-        textTheme: const TextTheme(
-          displayLarge: TextStyle(
-              fontSize: 32, fontWeight: FontWeight.bold, color: Colors.black87),
-          titleLarge: TextStyle(
-              fontSize: 22, fontWeight: FontWeight.w600, color: Colors.black87),
-          bodyLarge: TextStyle(fontSize: 18, color: Colors.black87),
-          bodyMedium: TextStyle(fontSize: 16, color: Colors.black54),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.grey),
+        cardTheme: CardThemeData(
+          color: Colors.white,
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.grey),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Color(0xFF00695C), width: 2),
-          ),
-          labelStyle: const TextStyle(fontSize: 18, color: Colors.black54),
-          contentPadding: const EdgeInsets.all(20),
         ),
       ),
-      home: const HomeScreen(),
+      home: hasSeenWelcome ? const HomeScreen() : const WelcomeScreen(),
     );
   }
 }

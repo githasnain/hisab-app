@@ -71,14 +71,17 @@ class HomeScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF00695C), Color(0xFF4DB6AC)],
+                      colors: [
+                        Color(0xFFFF7043),
+                        Color(0xFFFFAB91)
+                      ], // Coral to Soft Coral
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
+                        color: const Color(0xFFFF7043).withValues(alpha: 0.4),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -120,7 +123,7 @@ class HomeScreen extends StatelessWidget {
                         context,
                         'Add Expense',
                         Icons.add_circle_outline,
-                        const Color(0xFF00695C),
+                        const Color(0xFFFF7043), // Coral
                         () => Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -131,7 +134,7 @@ class HomeScreen extends StatelessWidget {
                         context,
                         'View History',
                         Icons.history,
-                        const Color(0xFF1565C0),
+                        const Color(0xFF81C784), // Soft Green
                         () => Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -142,7 +145,7 @@ class HomeScreen extends StatelessWidget {
                         context,
                         'Monthly Summary',
                         Icons.pie_chart_outline,
-                        const Color(0xFF6A1B9A),
+                        const Color(0xFFFFA726), // Orange
                         () => Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -157,7 +160,7 @@ class HomeScreen extends StatelessWidget {
                 const Padding(
                   padding: EdgeInsets.only(top: 20.0),
                   child: Text(
-                    'Develop by Hasnain Haider with ❤️',
+                    'Develop by Hasnain Haider',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.grey,
@@ -206,7 +209,7 @@ class HomeScreen extends StatelessWidget {
           const SizedBox(width: 20),
           Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
               color: Colors.black87,

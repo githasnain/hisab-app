@@ -4,6 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import '../boxes.dart';
 import '../models/expense.dart';
+import 'expense_detail_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -25,11 +26,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: const Color(0xFFFFF8E1), // Cream
       appBar: AppBar(
         title: const Text('Expense History'),
         elevation: 0,
         centerTitle: true,
+        backgroundColor: const Color(0xFFFFF8E1), // Cream
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
           child: Padding(
@@ -158,7 +160,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF00695C),
+              color: Color(0xFFFF7043), // Coral
             ),
           ),
           Text(
@@ -196,6 +198,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ExpenseDetailScreen(expense: expense),
+              ),
+            );
+          },
           onLongPress: () => _deleteExpense(context, expense),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -206,7 +216,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   width: 50,
                   height: 50,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF00695C).withValues(alpha: 0.1),
+                    color: const Color(0xFFFF7043)
+                        .withValues(alpha: 0.1), // Coral tint
                     shape: BoxShape.circle,
                     image: (expense.imagePaths.isNotEmpty)
                         ? DecorationImage(
@@ -218,7 +229,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   child: (expense.imagePaths.isEmpty)
                       ? Icon(
                           _getCategoryIcon(expense.category),
-                          color: const Color(0xFF00695C),
+                          color: const Color(0xFFFF7043), // Coral
                           size: 24,
                         )
                       : null,

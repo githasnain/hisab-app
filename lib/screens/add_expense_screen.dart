@@ -144,7 +144,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 style: const TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF00695C)),
+                    color: Color(0xFFFF7043)), // Coral
                 textAlign: TextAlign.center,
                 decoration: InputDecoration(
                   hintText: '0',
@@ -158,7 +158,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: Color(0xFFFFF8E1), // Cream
                   contentPadding: const EdgeInsets.symmetric(vertical: 20),
                 ),
                 validator: (value) {
@@ -185,21 +185,26 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               const SizedBox(height: 16),
 
               // Category Dropdown
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                style: const TextStyle(fontSize: 18, color: Colors.black87),
+              InputDecorator(
                 decoration: const InputDecoration(
                   labelText: 'Category',
                   prefixIcon: Icon(Icons.category),
                 ),
-                items: _categories.map((category) {
-                  return DropdownMenuItem(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
-                onChanged: (value) =>
-                    setState(() => _selectedCategory = value!),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedCategory,
+                    isDense: true,
+                    style: const TextStyle(fontSize: 18, color: Colors.black87),
+                    items: _categories.map((category) {
+                      return DropdownMenuItem(
+                        value: category,
+                        child: Text(category),
+                      );
+                    }).toList(),
+                    onChanged: (value) =>
+                        setState(() => _selectedCategory = value!),
+                  ),
+                ),
               ),
               const SizedBox(height: 16),
 
@@ -223,22 +228,27 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: DropdownButtonFormField<String>(
-                      value: _selectedPaymentMethod,
-                      style:
-                          const TextStyle(fontSize: 16, color: Colors.black87),
+                    child: InputDecorator(
                       decoration: const InputDecoration(
                         labelText: 'Payment',
                         prefixIcon: Icon(Icons.payment),
                       ),
-                      items: _paymentMethods.map((method) {
-                        return DropdownMenuItem(
-                          value: method,
-                          child: Text(method),
-                        );
-                      }).toList(),
-                      onChanged: (value) =>
-                          setState(() => _selectedPaymentMethod = value!),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _selectedPaymentMethod,
+                          isDense: true,
+                          style: const TextStyle(
+                              fontSize: 16, color: Colors.black87),
+                          items: _paymentMethods.map((method) {
+                            return DropdownMenuItem(
+                              value: method,
+                              child: Text(method),
+                            );
+                          }).toList(),
+                          onChanged: (value) =>
+                              setState(() => _selectedPaymentMethod = value!),
+                        ),
+                      ),
                     ),
                   ),
                 ],
