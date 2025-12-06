@@ -9,6 +9,7 @@ void main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(ExpenseAdapter());
   await Hive.openBox<Expense>('expenses');
+  await Hive.openBox('settings');
 
   runApp(const MyApp());
 }

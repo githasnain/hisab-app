@@ -3,4 +3,5 @@ import 'models/expense.dart';
 
 class Boxes {
   static Box<Expense> getExpenses() => Hive.box<Expense>('expenses');
+  static Box getSettings() => Hive.box('settings');
 }
