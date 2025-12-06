@@ -5,7 +5,9 @@ import 'package:intl/intl.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:gal/gal.dart';
 import 'package:path_provider/path_provider.dart';
+import '../boxes.dart';
 import '../models/expense.dart';
+import 'add_expense_screen.dart';
 
 class ExpenseDetailScreen extends StatefulWidget {
   final Expense expense;
@@ -19,15 +21,34 @@ class ExpenseDetailScreen extends StatefulWidget {
 class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
   final ScreenshotController _screenshotController = ScreenshotController();
   bool _isSaving = false;
+  late Expense _expense;
+
+  @override
+  void initState() {
+    super.initState();
+    _expense = widget.expense;
+  }
+
+  void _refreshExpense() {
+    final box = Boxes.getExpenses();
+    final freshExpense = box.values.firstWhere(
+      (e) => e.id == _expense.id,
+      orElse: () => _expense,
+    );
+    setState(() {
+      _expense = freshExpense;
+    });
+  }
 
   Future<void> _saveReceipt() async {
     setState(() => _isSaving = true);
 
     try {
       final directory = await getTemporaryDirectory();
-      final fileName = 'receipt_${widget.expense.id}.png';
+      final fileName = 'receipt_${_expense.id}.png';
       final path = '${directory.path}/$fileName';
 
+      // Capture the hidden widget directly
       final capturedImage = await _screenshotController.captureAndSave(
         directory.path,
         fileName: fileName,
@@ -38,7 +59,8 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
         await Gal.putImage(path, album: 'Hisab Receipts');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Receipt saved to Gallery!')),
+            const SnackBar(
+                content: Text('Receipt saved to Gallery (Hisab Receipts)!')),
           );
         }
       }
@@ -61,6 +83,21 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
       appBar: AppBar(
         title: const Text('Expense Details'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      AddExpenseScreen(expenseToEdit: _expense),
+                ),
+              ).then((_) {
+                _refreshExpense(); // Refresh UI and data after edit
+              });
+            },
+            tooltip: 'Edit Expense',
+          ),
           IconButton(
             icon: const Icon(Icons.save_alt),
             onPressed: _isSaving ? null : _saveReceipt,
@@ -94,14 +131,14 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     // Header
-                    Icon(
+                    const Icon(
                       Icons.receipt_long,
                       size: 48,
-                      color: const Color(0xFFFF7043),
+                      color: Color(0xFFFF7043),
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'PAYMENT RECEIPT',
+                      _isSaving ? 'PAYMENT RECEIPT' : 'EXPENSE DETAIL',
                       style: GoogleFonts.poppins(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -111,8 +148,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      DateFormat('MMMM d, yyyy  h:mm a')
-                          .format(widget.expense.date),
+                      DateFormat('MMMM d, yyyy  h:mm a').format(_expense.date),
                       style: GoogleFonts.poppins(
                         color: Colors.grey.shade600,
                         fontSize: 12,
@@ -132,7 +168,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                     const SizedBox(height: 8),
                     Text(
                       NumberFormat.simpleCurrency(locale: 'en_US', name: 'PKR')
-                          .format(widget.expense.amount),
+                          .format(_expense.amount),
                       style: GoogleFonts.poppins(
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
@@ -142,44 +178,113 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                     const Divider(height: 40, thickness: 1),
 
                     // Details
-                    _buildDetailRow('Category', widget.expense.category),
-                    _buildDetailRow(
-                        'Payment Method', widget.expense.paymentMethod),
-                    if (widget.expense.title.isNotEmpty)
-                      _buildDetailRow('Item', widget.expense.title),
-                    if (widget.expense.note.isNotEmpty)
-                      _buildDetailRow('Note', widget.expense.note),
+                    _buildDetailRow('Category', _expense.category),
+                    _buildDetailRow('Payment Method', _expense.paymentMethod),
+                    if (_expense.title.isNotEmpty)
+                      _buildDetailRow('Item', _expense.title),
+                    if (_expense.note.isNotEmpty)
+                      _buildDetailRow('Note', _expense.note),
 
-                    const SizedBox(height: 40),
-
-                    // Stamp
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                            color: const Color(0xFFFF7043), width: 2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      transform: Matrix4.rotationZ(-0.1),
-                      child: Text(
-                        'Hisab\nDeveloped by Hasnain Haider',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.courierPrime(
-                          color: const Color(0xFFFF7043),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                    // Stamp (Only visible on Receipt)
+                    if (_isSaving) ...[
+                      const SizedBox(height: 40),
+                      // Circular Digital Stamp
+                      Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                              color: const Color(0xFFFF7043)
+                                  .withValues(alpha: 0.8),
+                              width: 3),
+                        ),
+                        transform: Matrix4.rotationZ(-0.2),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // Outer Ring Text (Simulated with positioning)
+                            Positioned(
+                              top: 10,
+                              child: Text(
+                                'HISAB APP',
+                                style: GoogleFonts.courierPrime(
+                                  color: const Color(0xFFFF7043)
+                                      .withValues(alpha: 0.8),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 10,
+                              child: Text(
+                                'VERIFIED',
+                                style: GoogleFonts.courierPrime(
+                                  color: const Color(0xFFFF7043)
+                                      .withValues(alpha: 0.8),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                            ),
+                            // Center Star
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.star,
+                                    color: const Color(0xFFFF7043)
+                                        .withValues(alpha: 0.8),
+                                    size: 24),
+                                Text(
+                                  'APPROVED',
+                                  style: GoogleFonts.courierPrime(
+                                    color: const Color(0xFFFF7043)
+                                        .withValues(alpha: 0.8),
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Thank you!',
-                      style: GoogleFonts.dancingScript(
-                        fontSize: 24,
-                        color: Colors.grey.shade400,
+                      const SizedBox(height: 20),
+                      const SizedBox(height: 40),
+                      const Divider(color: Colors.grey, thickness: 0.5),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Generated by Hisab App',
+                            style: GoogleFonts.poppins(
+                              fontSize: 8,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                          Text(
+                            'Developed by Hasnain Haider',
+                            style: GoogleFonts.poppins(
+                              fontSize: 8,
+                              color: Colors.grey.shade500,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Thank You!',
+                            style: GoogleFonts.dancingScript(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),
@@ -188,7 +293,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
             const SizedBox(height: 24),
 
             // Photos Section (Outside Receipt)
-            if (widget.expense.imagePaths.isNotEmpty) ...[
+            if (_expense.imagePaths.isNotEmpty) ...[
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -204,7 +309,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                 height: 120,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: widget.expense.imagePaths.length,
+                  itemCount: _expense.imagePaths.length,
                   itemBuilder: (context, index) {
                     return Container(
                       width: 120,
@@ -212,8 +317,7 @@ class _ExpenseDetailScreenState extends State<ExpenseDetailScreen> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
                         image: DecorationImage(
-                          image:
-                              FileImage(File(widget.expense.imagePaths[index])),
+                          image: FileImage(File(_expense.imagePaths[index])),
                           fit: BoxFit.cover,
                         ),
                       ),

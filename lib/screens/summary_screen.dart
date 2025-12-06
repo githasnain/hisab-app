@@ -3,9 +3,24 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import '../boxes.dart';
 import '../models/expense.dart';
+import '../services/report_service.dart';
 
-class SummaryScreen extends StatelessWidget {
+class SummaryScreen extends StatefulWidget {
   const SummaryScreen({super.key});
+
+  @override
+  State<SummaryScreen> createState() => _SummaryScreenState();
+}
+
+class _SummaryScreenState extends State<SummaryScreen> {
+  DateTime _selectedMonth = DateTime.now();
+
+  void _changeMonth(int months) {
+    setState(() {
+      _selectedMonth =
+          DateTime(_selectedMonth.year, _selectedMonth.month + months);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,16 +32,27 @@ class SummaryScreen extends StatelessWidget {
         centerTitle: true,
         backgroundColor: const Color(0xFFFFF8E1), // Cream
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          final box = Boxes.getExpenses();
+          final expenses = box.values.toList().cast<Expense>();
+          _generateReport(expenses);
+        },
+        label: const Text('Download Report'),
+        icon: const Icon(Icons.picture_as_pdf),
+        backgroundColor: const Color(0xFF00695C),
+        foregroundColor: Colors.white, // Fix contrast
+      ),
       body: ValueListenableBuilder<Box<Expense>>(
         valueListenable: Boxes.getExpenses().listenable(),
         builder: (context, box, _) {
           final expenses = box.values.toList().cast<Expense>();
 
-          // Filter for current month
-          final now = DateTime.now();
+          // Filter for selected month
           final currentMonthExpenses = expenses
-              .where(
-                  (e) => e.date.month == now.month && e.date.year == now.year)
+              .where((e) =>
+                  e.date.month == _selectedMonth.month &&
+                  e.date.year == _selectedMonth.year)
               .toList();
 
           // Calculate totals
@@ -93,6 +119,8 @@ class SummaryScreen extends StatelessWidget {
                           ],
                         ),
                       ),
+                    // Bottom padding for FAB
+                    const SizedBox(height: 80),
                   ],
                 ),
               );
@@ -107,19 +135,26 @@ class SummaryScreen extends StatelessWidget {
       BuildContext context, double total, double budget, Box settingsBox) {
     final currencyFormat =
         NumberFormat.simpleCurrency(locale: 'en_US', name: 'PKR');
-    final now = DateTime.now();
 
+    double rawProgress = 0.0;
     double progress = 0.0;
     Color progressColor = Colors.green;
+    String statusText = '';
 
     if (budget > 0) {
-      progress = total / budget;
-      if (progress > 1.0) progress = 1.0;
+      rawProgress = total / budget;
+      progress = rawProgress > 1.0 ? 1.0 : rawProgress;
 
-      if (progress > 0.9) {
+      if (rawProgress > 1.0) {
         progressColor = Colors.red;
-      } else if (progress > 0.7) {
-        progressColor = Colors.orange;
+        statusText = 'Over budget by ${currencyFormat.format(total - budget)}';
+      } else {
+        statusText = '${(rawProgress * 100).toInt()}% used';
+        if (rawProgress > 0.9) {
+          progressColor = Colors.orange;
+        } else if (rawProgress > 0.7) {
+          progressColor = Colors.amber;
+        }
       }
     }
 
@@ -144,21 +179,41 @@ class SummaryScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(
-            DateFormat('MMMM y').format(now),
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-            ),
+          // Month Selector
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios,
+                    color: Colors.white70, size: 20),
+                onPressed: () => _changeMonth(-1),
+              ),
+              Text(
+                DateFormat('MMMM y').format(_selectedMonth),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.arrow_forward_ios,
+                    color: Colors.white70, size: 20),
+                onPressed: () => _changeMonth(1),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
-          Text(
-            currencyFormat.format(total),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 42,
-              fontWeight: FontWeight.bold,
+          // Total Amount with scaling
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              currencyFormat.format(total),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 42,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(height: 24),
@@ -214,9 +269,13 @@ class SummaryScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      '${(progress * 100).toInt()}% used',
-                      style:
-                          const TextStyle(color: Colors.white70, fontSize: 12),
+                      statusText,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ],
@@ -269,14 +328,18 @@ class SummaryScreen extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      category,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                    Expanded(
+                      child: Text(
+                        category,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    const SizedBox(width: 8),
                     Text(
                       currencyFormat.format(amount),
                       style: const TextStyle(
@@ -388,5 +451,9 @@ class SummaryScreen extends StatelessWidget {
       default:
         return Colors.teal;
     }
+  }
+
+  Future<void> _generateReport(List<Expense> expenses) async {
+    await ReportService.generateMonthlyReport(expenses, _selectedMonth);
   }
 }

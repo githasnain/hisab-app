@@ -6,7 +6,9 @@ import '../boxes.dart';
 import '../models/expense.dart';
 
 class AddExpenseScreen extends StatefulWidget {
-  const AddExpenseScreen({super.key});
+  final Expense? expenseToEdit;
+
+  const AddExpenseScreen({super.key, this.expenseToEdit});
 
   @override
   State<AddExpenseScreen> createState() => _AddExpenseScreenState();
@@ -36,6 +38,22 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   DateTime _selectedDate = DateTime.now();
   final List<String> _imagePaths = [];
   final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.expenseToEdit != null) {
+      final e = widget.expenseToEdit!;
+      _titleController.text = e.title;
+      _amountController.text =
+          e.amount.toStringAsFixed(0); // No decimals for int-like
+      _noteController.text = e.note;
+      _selectedCategory = e.category;
+      _selectedPaymentMethod = e.paymentMethod;
+      _selectedDate = e.date;
+      _imagePaths.addAll(e.imagePaths);
+    }
+  }
 
   @override
   void dispose() {
@@ -73,7 +91,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       final amount = double.tryParse(_amountController.text) ?? 0.0;
 
       final expense = Expense(
-        id: const Uuid().v4(),
+        id: widget.expenseToEdit?.id ?? const Uuid().v4(),
         title: _titleController.text.isEmpty
             ? _selectedCategory
             : _titleController.text,
@@ -86,11 +104,26 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       );
 
       final box = Boxes.getExpenses();
-      await box.add(expense);
+
+      if (widget.expenseToEdit != null) {
+        // Find key to update
+        final key = box.keys.firstWhere((k) => box.get(k)?.id == expense.id,
+            orElse: () => null);
+        if (key != null) {
+          await box.put(key, expense);
+        } else {
+          await box.add(expense); // Fallback
+        }
+      } else {
+        await box.add(expense);
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Expense Added Successfully!')),
+          SnackBar(
+              content: Text(widget.expenseToEdit != null
+                  ? 'Expense Updated!'
+                  : 'Expense Added Successfully!')),
         );
         Navigator.pop(context);
       }
@@ -127,7 +160,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Add New Expense'),
+        title: Text(
+            widget.expenseToEdit != null ? 'Edit Expense' : 'Add New Expense'),
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -138,13 +172,15 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Amount Field (Big & Bold)
+              // Amount Field (Big & Bold)
               TextFormField(
                 controller: _amountController,
                 keyboardType: TextInputType.number,
+                cursorColor: const Color(0xFFFF7043), // Coral cursor
                 style: const TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFFFF7043)), // Coral
+                    color: Color(0xFF2D3142)), // Dark text
                 textAlign: TextAlign.center,
                 decoration: InputDecoration(
                   hintText: '0',
@@ -152,21 +188,36 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   prefixStyle: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black54),
+                      color: Colors.grey),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
+                    borderSide:
+                        const BorderSide(color: Color(0xFFFF7043), width: 1.5),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide:
+                        const BorderSide(color: Color(0xFFFF7043), width: 1.5),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide:
+                        const BorderSide(color: Color(0xFFFF7043), width: 2.5),
                   ),
                   filled: true,
-                  fillColor: Color(0xFFFFF8E1), // Cream
+                  fillColor: Colors.white, // White background
                   contentPadding: const EdgeInsets.symmetric(vertical: 20),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter amount';
                   }
-                  if (double.tryParse(value) == null) {
+                  final amount = double.tryParse(value);
+                  if (amount == null) {
                     return 'Please enter a valid number';
+                  }
+                  if (amount > 9999999) {
+                    return 'Amount too large (Max 7 figures)';
                   }
                   return null;
                 },
@@ -348,8 +399,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16)),
                   ),
-                  child: const Text('SAVE EXPENSE',
-                      style: TextStyle(fontSize: 20)),
+                  child: Text(
+                      widget.expenseToEdit != null
+                          ? 'UPDATE EXPENSE'
+                          : 'SAVE EXPENSE',
+                      style: const TextStyle(fontSize: 20)),
                 ),
               ),
             ],

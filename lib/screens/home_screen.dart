@@ -14,7 +14,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home Expense Manager'),
+        title: const Text('Hisab'),
       ),
       body: ValueListenableBuilder<Box<Expense>>(
         valueListenable: Boxes.getExpenses().listenable(),
@@ -39,33 +39,6 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Logo
-                Center(
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 20),
-                    height: 100,
-                    width: 100,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: ClipOval(
-                      child: Padding(
-                        padding: const EdgeInsets.all(15.0),
-                        child:
-                            Image.asset('assets/logo.png', fit: BoxFit.contain),
-                      ),
-                    ),
-                  ),
-                ),
-
                 // Monthly Summary Card
                 Container(
                   padding: const EdgeInsets.all(24),
